@@ -1,13 +1,20 @@
 {
   "name": "gnomon-mcp",
+  "metadata": {
+    "description": "Marketplace hosting the gnomon Claude Code plugin — deterministic dates, math, and unit conversion for LLM agents."
+  },
   "owner": {
     "name": "Senthil Ramasamy"
   },
   "plugins": [
     {
       "name": "gnomon",
-      "source": ".",
-      "description": "Deterministic dates, calendars, math, and unit conversion for LLM agents — stop next-token-guessing."
+      "description": "Deterministic dates, calendars, math, and unit conversion for LLM agents — stop next-token-guessing.",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/lihtness/gnomon-mcp.git"
+      },
+      "homepage": "https://github.com/lihtness/gnomon-mcp"
     }
   ]
 }
