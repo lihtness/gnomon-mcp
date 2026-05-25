@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.lihtness/gnomon-mcp",
+  "title": "gnomon",
+  "description": "Deterministic batch tools so LLM agents stop next-token-guessing dates and math. Rich now() snapshot, calendar(ops) batch dispatcher (date arithmetic, business days, natural-language parsing), calc(expressions) with math/stats pre-loaded, and Pint-based unit conversion.",
+  "repository": {
+    "url": "https://github.com/lihtness/gnomon-mcp",
+    "source": "github"
+  },
+  "version": "0.1.1",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "gnomon-mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

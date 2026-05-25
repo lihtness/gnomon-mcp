@@ -1,5 +1,7 @@
 # gnomon-mcp
 
+<!-- mcp-name: io.github.lihtness/gnomon-mcp -->
+
 > The pointer on a sundial that turns shadow into time.
 
 A small MCP server for the boring-but-essential utilities every model needs: dates, calendars, arithmetic, unit conversion. Use it so your assistant stops "next-token guessing" math and date math.
