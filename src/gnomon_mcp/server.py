@@ -7,6 +7,7 @@ from gnomon_mcp.tools import calc_tools, calendar_tools
 
 mcp = FastMCP("gnomon")
 
+mcp.tool()(calendar_tools.now)
 mcp.tool()(calendar_tools.calendar)
 mcp.tool()(calc_tools.calc)
 mcp.tool()(calc_tools.calc_convert)

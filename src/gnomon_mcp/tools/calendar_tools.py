@@ -28,16 +28,52 @@ def _parse_date(s: str) -> datetime:
     return dtparser.isoparse(s) if "T" in s or " " in s else dtparser.parse(s)
 
 
-# ---- individual operations (also usable directly) ----
+# ---- standalone: rich "right now" snapshot ----
 
-def _now(tz: Optional[str] = None) -> str:
-    return datetime.now(_resolve_tz(tz)).isoformat()
+_MONTH_NAMES = ["", "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"]
 
 
-def _diff(start: str, end: str, unit: str = "days") -> float:
+def now(tz: Optional[str] = None) -> dict[str, Any]:
+    """Return a rich snapshot of the current moment.
+
+    One call gets you everything: ISO string, date, time, weekday, day-of-year,
+    week-of-year (ISO), quarter, US federal fiscal year, hour/minute/second,
+    unix timestamp, timezone, weekend flag.
+
+    tz: IANA timezone (e.g. 'America/Los_Angeles'). Defaults to UTC.
+    """
+    dt = datetime.now(_resolve_tz(tz))
+    iso_cal = dt.isocalendar()
+    weekday_num = dt.weekday()
+    return {
+        "iso": dt.isoformat(),
+        "date": dt.date().isoformat(),
+        "time": dt.time().isoformat(timespec="seconds"),
+        "unix": int(dt.timestamp()),
+        "tz": tz or "UTC",
+        "year": dt.year,
+        "month": dt.month,
+        "month_name": _MONTH_NAMES[dt.month],
+        "day": dt.day,
+        "weekday": _WEEKDAY_NAMES[weekday_num],
+        "weekday_num": weekday_num,  # 0=Monday
+        "day_of_year": dt.timetuple().tm_yday,
+        "week_of_year": iso_cal.week,  # ISO week
+        "quarter": (dt.month - 1) // 3 + 1,
+        "fiscal_year_us_gov": dt.year + (1 if dt.month >= 10 else 0),
+        "hour": dt.hour,
+        "minute": dt.minute,
+        "second": dt.second,
+        "is_weekend": weekday_num >= 5,
+    }
+
+
+# ---- batch operations (each returns a scalar) ----
+
+def _diff_seconds_to_unit(seconds: float, unit: str) -> float:
     if unit not in _UNITS_DELTA:
         raise ValueError(f"unit must be one of {sorted(_UNITS_DELTA)}")
-    seconds = (_parse_date(end) - _parse_date(start)).total_seconds()
     return {
         "seconds": seconds,
         "minutes": seconds / 60,
@@ -45,6 +81,29 @@ def _diff(start: str, end: str, unit: str = "days") -> float:
         "days": seconds / 86400,
         "weeks": seconds / 604800,
     }[unit]
+
+
+def _diff(start: str, end: str, unit: str = "days") -> float:
+    seconds = (_parse_date(end) - _parse_date(start)).total_seconds()
+    return _diff_seconds_to_unit(seconds, unit)
+
+
+def _until(target: str, unit: str = "days", tz: Optional[str] = None) -> float:
+    """Time left from now to target. Positive if target is in the future."""
+    target_dt = _parse_date(target)
+    if target_dt.tzinfo is None:
+        target_dt = target_dt.replace(tzinfo=_resolve_tz(tz))
+    seconds = (target_dt - datetime.now(_resolve_tz(tz))).total_seconds()
+    return _diff_seconds_to_unit(seconds, unit)
+
+
+def _since(source: str, unit: str = "days", tz: Optional[str] = None) -> float:
+    """Time elapsed from source to now. Positive if source is in the past."""
+    source_dt = _parse_date(source)
+    if source_dt.tzinfo is None:
+        source_dt = source_dt.replace(tzinfo=_resolve_tz(tz))
+    seconds = (datetime.now(_resolve_tz(tz)) - source_dt).total_seconds()
+    return _diff_seconds_to_unit(seconds, unit)
 
 
 def _add(date: str, n: int, unit: str = "days") -> str:
@@ -95,8 +154,9 @@ def _format(date: str, fmt: str) -> str:
 # ---- dispatch ----
 
 _OPS = {
-    "now": _now,
     "diff": _diff,
+    "until": _until,
+    "since": _since,
     "add": _add,
     "weekday": _weekday,
     "business_days": _business_days,
@@ -112,10 +172,12 @@ def calendar(ops: Sequence[dict]) -> list[Any]:
     Designed for table-row workloads: many rows, one tool call.
 
     Operations:
-      {"op": "now", "tz": "America/Los_Angeles"}
-          -> current ISO datetime in tz (default UTC)
       {"op": "diff", "start": "2026-01-01", "end": "2026-12-31", "unit": "days"}
           -> end - start as float in the unit (seconds|minutes|hours|days|weeks)
+      {"op": "until", "target": "2026-12-31", "unit": "days", "tz": "UTC"}
+          -> time left from now to target (positive if future)
+      {"op": "since", "source": "2026-01-01", "unit": "days", "tz": "UTC"}
+          -> time elapsed from source to now (positive if past)
       {"op": "add", "date": "2026-05-25", "n": 30, "unit": "days"}
           -> ISO of date + n units (units: seconds..weeks, plus months/years)
       {"op": "weekday", "date": "2026-05-25"}
@@ -126,6 +188,9 @@ def calendar(ops: Sequence[dict]) -> list[Any]:
           -> ISO datetime parsed from natural language
       {"op": "format", "date": "2026-05-25", "fmt": "%A, %B %d %Y"}
           -> strftime-formatted string
+
+    For "what is right now" use the standalone `now()` tool — it returns
+    a rich dict (year, month, weekday, quarter, week_of_year, etc.) in one call.
 
     Errors in any item raise immediately with the index and op for debugging.
     """

@@ -12,25 +12,53 @@ LLMs are bad at arithmetic and date math by default. They produce plausible answ
 
 ### Calendar
 
-One batch tool that dispatches over many operations. Each item in the input list picks its own op — designed for table-row workloads where you want one tool call for many heterogeneous date operations.
+Two tools:
+
+- **`now(tz?)`** — standalone. Returns a rich dict snapshot of the current moment. One call gets you everything about "right now".
+- **`calendar(ops)`** — batch dispatcher. Each item picks its own op. Designed for table-row workloads (e.g. one call computes time-elapsed for every row).
+
+**`now(tz?)`** returns:
+
+```python
+{
+  "iso": "2026-05-25T14:30:45+00:00",
+  "date": "2026-05-25",
+  "time": "14:30:45",
+  "unix": 1779345045,
+  "tz": "UTC",
+  "year": 2026, "month": 5, "month_name": "May", "day": 25,
+  "weekday": "Monday", "weekday_num": 0,          # 0=Monday
+  "day_of_year": 145, "week_of_year": 22,         # ISO week
+  "quarter": 2, "fiscal_year_us_gov": 2026,       # FY starts Oct 1
+  "hour": 14, "minute": 30, "second": 45,
+  "is_weekend": False,
+}
+```
+
+**`calendar(ops)`** operations:
 
 | Op | Params | Returns |
 |---|---|---|
-| `now` | `tz?` | current ISO datetime in `tz` (default UTC) |
-| `diff` | `start, end, unit` | `end - start` as float (`seconds\|minutes\|hours\|days\|weeks`) |
-| `add` | `date, n, unit` | ISO of `date + n units` (above units plus `months\|years`, calendar-aware) |
+| `diff` | `start, end, unit` | `end - start` — time elapsed between two known dates |
+| `until` | `target, unit, tz?` | `target - now` — time left to a future point (negative if past) |
+| `since` | `source, unit, tz?` | `now - source` — time elapsed since a past point (negative if future) |
+| `add` | `date, n, unit` | ISO of `date + n units` (`seconds\|...\|weeks`, plus `months\|years` calendar-aware) |
 | `weekday` | `date` | `"Monday"`..`"Sunday"` |
 | `business_days` | `start, end` | count of Mon-Fri days (start inclusive, end exclusive) |
 | `parse` | `natural, tz?` | ISO from natural language ("next thursday", "in 3 hours") |
 | `format` | `date, fmt` | strftime-formatted string |
 
-Example:
+Units for `diff`/`until`/`since`: `seconds`, `minutes`, `hours`, `days`, `weeks`.
+
+Example — compute several things in one call:
 
 ```python
 calendar([
-  {"op": "weekday", "date": "2026-05-25"},                         # → "Monday"
-  {"op": "diff", "start": "2026-01-01", "end": "2026-12-31", "unit": "days"},  # → 364.0
-  {"op": "add", "date": "2026-05-25", "n": 1, "unit": "months"},  # → "2026-06-25T00:00:00"
+  {"op": "until", "target": "2026-12-31", "unit": "days"},          # days left in year
+  {"op": "since", "source": "2026-01-01", "unit": "days"},          # days elapsed in year
+  {"op": "diff", "start": "2026-01-01", "end": "2026-12-31", "unit": "days"},
+  {"op": "weekday", "date": "2026-05-25"},                           # "Monday"
+  {"op": "add", "date": "2026-05-25", "n": 1, "unit": "months"},
   {"op": "parse", "natural": "next thursday", "tz": "America/Los_Angeles"},
 ])
 ```

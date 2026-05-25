@@ -1,20 +1,52 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from gnomon_mcp.tools.calendar_tools import calendar
+from gnomon_mcp.tools.calendar_tools import calendar, now
+
+
+class TestNow:
+    def test_returns_rich_dict(self):
+        snap = now()
+        expected_keys = {
+            "iso", "date", "time", "unix", "tz",
+            "year", "month", "month_name", "day",
+            "weekday", "weekday_num", "day_of_year",
+            "week_of_year", "quarter", "fiscal_year_us_gov",
+            "hour", "minute", "second", "is_weekend",
+        }
+        assert set(snap.keys()) == expected_keys
+
+    def test_utc_default(self):
+        snap = now()
+        assert snap["tz"] == "UTC"
+        assert datetime.fromisoformat(snap["iso"]).utcoffset().total_seconds() == 0
+
+    def test_named_tz(self):
+        snap = now("America/Los_Angeles")
+        assert snap["tz"] == "America/Los_Angeles"
+        assert datetime.fromisoformat(snap["iso"]).tzinfo is not None
+
+    def test_quarter_derived_from_month(self):
+        snap = now()
+        assert snap["quarter"] == (snap["month"] - 1) // 3 + 1
+
+    def test_fiscal_year_us_gov(self):
+        snap = now()
+        expected_fy = snap["year"] + (1 if snap["month"] >= 10 else 0)
+        assert snap["fiscal_year_us_gov"] == expected_fy
+
+    def test_weekday_matches_num(self):
+        snap = now()
+        names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        assert snap["weekday"] == names[snap["weekday_num"]]
+
+    def test_is_weekend_flag(self):
+        snap = now()
+        assert snap["is_weekend"] == (snap["weekday_num"] >= 5)
 
 
 class TestCalendarSingleOps:
-    def test_now_utc_default(self):
-        [iso] = calendar([{"op": "now"}])
-        parsed = datetime.fromisoformat(iso)
-        assert parsed.utcoffset().total_seconds() == 0
-
-    def test_now_named_tz(self):
-        [iso] = calendar([{"op": "now", "tz": "America/Los_Angeles"}])
-        assert datetime.fromisoformat(iso).tzinfo is not None
-
     def test_diff_days(self):
         assert calendar([{"op": "diff", "start": "2026-01-01", "end": "2026-01-08", "unit": "days"}]) == [7.0]
 
@@ -48,6 +80,47 @@ class TestCalendarSingleOps:
     def test_format(self):
         [s] = calendar([{"op": "format", "date": "2026-05-25", "fmt": "%A"}])
         assert s == "Monday"
+
+
+class TestUntilSince:
+    def test_until_future(self):
+        future = (datetime.now(timezone.utc) + timedelta(days=10)).isoformat()
+        [days] = calendar([{"op": "until", "target": future, "unit": "days"}])
+        assert 9.9 < days < 10.1
+
+    def test_until_past_is_negative(self):
+        past = (datetime.now(timezone.utc) - timedelta(days=5)).isoformat()
+        [days] = calendar([{"op": "until", "target": past, "unit": "days"}])
+        assert -5.1 < days < -4.9
+
+    def test_since_past(self):
+        past = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+        [days] = calendar([{"op": "since", "source": past, "unit": "days"}])
+        assert 6.9 < days < 7.1
+
+    def test_since_future_is_negative(self):
+        future = (datetime.now(timezone.utc) + timedelta(days=3)).isoformat()
+        [days] = calendar([{"op": "since", "source": future, "unit": "days"}])
+        assert -3.1 < days < -2.9
+
+    def test_until_naive_date_treated_as_tz(self):
+        # Naive ISO date with tz hint — should not raise
+        result = calendar([{"op": "until", "target": "2099-01-01", "unit": "days", "tz": "UTC"}])
+        assert result[0] > 0
+
+    def test_until_in_hours(self):
+        future = (datetime.now(timezone.utc) + timedelta(hours=12)).isoformat()
+        [hours] = calendar([{"op": "until", "target": future, "unit": "hours"}])
+        assert 11.99 < hours < 12.01
+
+    def test_batch_mix_until_and_since(self):
+        future = (datetime.now(timezone.utc) + timedelta(days=10)).isoformat()
+        past = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+        results = calendar([
+            {"op": "until", "target": future, "unit": "days"},
+            {"op": "since", "source": past, "unit": "days"},
+        ])
+        assert results[0] > 0 and results[1] > 0
 
 
 class TestCalendarBatch:
