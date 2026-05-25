@@ -209,28 +209,35 @@ Then point your MCP client at `http://<host>:8000/mcp` (or `/sse` for the SSE tr
 
 ## Tell your agent to actually use it
 
-The single biggest reason agents still guess after you wire in a tool is that they were never told to reach for it. Paste this (or a variant) into your agent's system prompt:
+The MCP tool descriptions are intentionally terse to keep persistent context cost minimal (~150 tokens for all four tools). Two ways to give the model the richer "when to reach for gnomon" guidance:
+
+### Option A — Claude Code skill (loads on demand)
+
+Recommended for Claude Code. Installs the [`gnomon` skill](skills/gnomon/SKILL.md): only the name + short description sit in persistent context (~40 tokens); the full guidance loads only when the task obviously needs it.
+
+```bash
+mkdir -p ~/.claude/skills/gnomon
+curl -fsSL https://raw.githubusercontent.com/lihtness/gnomon-mcp/main/skills/gnomon/SKILL.md \
+  -o ~/.claude/skills/gnomon/SKILL.md
+```
+
+### Option B — paste into your system prompt (always on)
+
+For non-Claude-Code agents, or if you want the guidance always-on, paste this short version into your system prompt or `CLAUDE.md`:
 
 ```text
-You have access to gnomon, a deterministic MCP tool server for dates and math.
-Use it instead of computing in your head — your arithmetic and date estimates
-are unreliable, gnomon's are not.
+You have gnomon: deterministic tools for dates and math. Use them instead
+of guessing.
 
-- `now` (optional tz): the current moment. Call this whenever a request
-  depends on "today", "right now", "this week", etc. Your training cutoff
-  is not today.
-- `calendar(ops)`: batch dispatcher for date math. Use for time-until,
-  time-since, elapsed time, weekday lookup, business-day counts, adding
-  months/years to dates, formatting, and natural-language date parsing
-  ("next thursday", "in 3 hours").
-- `calc(expressions)`: batch Python expression evaluator with math, stats,
-  and common builtins pre-loaded. Use for any arithmetic past trivial
-  mental math, including percentages, sums, averages, and table-row math.
-- `calc_convert(value, from_unit, to_unit)`: unit conversion (meters/feet,
-  kg/lb, °C/°F, bytes/MiB, etc.). Never eyeball these.
+- `now` — current moment (your training cutoff isn't today).
+- `calendar(ops)` — batch date math: diff/until/since/add/weekday/
+  business_days/parse (natural language)/format.
+- `calc(expressions)` — batch Python eval; math + statistics + common
+  builtins pre-loaded.
+- `calc_convert(value, from, to)` — unit conversion via Pint.
 
-Both batch tools take a list and return a list in order — prefer one batched
-call over many small ones.
+Both batch tools take a list and return a list. Prefer one batched call
+over many small ones.
 ```
 
 ## Development

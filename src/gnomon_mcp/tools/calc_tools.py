@@ -39,23 +39,7 @@ _NAMESPACE = _build_namespace()
 
 
 def calc(expressions: Sequence[str]) -> list[Any]:
-    """Evaluate a batch of Python expressions and return the results.
-
-    Each expression is evaluated independently with Python's `eval`. The
-    namespace includes everything in `math` (sqrt, sin, log, pi, e, ...),
-    common stats (mean, median, stdev, variance), and useful builtins
-    (abs, round, min, max, sum, range, sorted, ...).
-
-    Examples:
-        ["2 + 3 * 4"]                           -> [14]
-        ["sqrt(16)", "sin(pi/2)"]               -> [4.0, 1.0]
-        ["mean([1, 2, 3, 4])"]                  -> [2.5]
-        ["sum(range(101))"]                     -> [5050]
-        ["(25 / 100) * 100"]                    -> [25.0]
-
-    Returns results in the same order as inputs. Errors in any expression
-    raise immediately — the model can split the batch to localize the bad one.
-    """
+    """Eval Python expressions -> list. Pre-loaded: math, statistics (mean/median/stdev/variance), abs/round/min/max/sum/range/sorted."""
     if isinstance(expressions, str):
         # tolerate a single string for ergonomics
         expressions = [expressions]
@@ -69,11 +53,7 @@ def calc(expressions: Sequence[str]) -> list[Any]:
 
 
 def calc_convert(value: float, from_unit: str, to_unit: str) -> float:
-    """Convert a value between units (e.g. 'meter' → 'foot', 'kg' → 'lb', 'degC' → 'degF').
-
-    Uses Pint's unit registry — supports SI, US customary, time, data, etc.
-    Raises if units are incompatible.
-    """
+    """Convert value between units (Pint). E.g. ('meter','foot'), ('kg','lb'), ('degC','degF')."""
     try:
         quantity = _ureg.Quantity(value, from_unit).to(to_unit)
     except Exception as e:

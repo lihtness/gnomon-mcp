@@ -35,14 +35,7 @@ _MONTH_NAMES = ["", "January", "February", "March", "April", "May", "June",
 
 
 def now(tz: Optional[str] = None) -> dict[str, Any]:
-    """Return a rich snapshot of the current moment.
-
-    One call gets you everything: ISO string, date, time, weekday, day-of-year,
-    week-of-year (ISO), quarter, US federal fiscal year, hour/minute/second,
-    unix timestamp, timezone, weekend flag.
-
-    tz: IANA timezone (e.g. 'America/Los_Angeles'). Defaults to UTC.
-    """
+    """Current moment as dict (iso, date, weekday, week_of_year, quarter, fiscal_year_us_gov, is_weekend, ...). Optional IANA tz."""
     dt = datetime.now(_resolve_tz(tz))
     iso_cal = dt.isocalendar()
     weekday_num = dt.weekday()
@@ -166,33 +159,14 @@ _OPS = {
 
 
 def calendar(ops: Sequence[dict]) -> list[Any]:
-    """Execute a batch of calendar operations and return results in order.
+    """Batch date ops: [{"op": NAME, ...args}, ...] -> [result, ...]
 
-    Each item is a dict with an "op" key plus op-specific parameters.
-    Designed for table-row workloads: many rows, one tool call.
+    diff(start, end, unit)  until(target, unit, tz?)  since(source, unit, tz?)  -> float
+    add(date, n, unit) -> ISO    weekday(date) -> name
+    business_days(start, end) -> int (Mon-Fri, end exclusive)
+    parse(natural, tz?) -> ISO    format(date, fmt) -> str
 
-    Operations:
-      {"op": "diff", "start": "2026-01-01", "end": "2026-12-31", "unit": "days"}
-          -> end - start as float in the unit (seconds|minutes|hours|days|weeks)
-      {"op": "until", "target": "2026-12-31", "unit": "days", "tz": "UTC"}
-          -> time left from now to target (positive if future)
-      {"op": "since", "source": "2026-01-01", "unit": "days", "tz": "UTC"}
-          -> time elapsed from source to now (positive if past)
-      {"op": "add", "date": "2026-05-25", "n": 30, "unit": "days"}
-          -> ISO of date + n units (units: seconds..weeks, plus months/years)
-      {"op": "weekday", "date": "2026-05-25"}
-          -> "Monday".."Sunday"
-      {"op": "business_days", "start": "2026-05-01", "end": "2026-06-01"}
-          -> count of Mon-Fri days (start inclusive, end exclusive)
-      {"op": "parse", "natural": "next thursday", "tz": "America/Los_Angeles"}
-          -> ISO datetime parsed from natural language
-      {"op": "format", "date": "2026-05-25", "fmt": "%A, %B %d %Y"}
-          -> strftime-formatted string
-
-    For "what is right now" use the standalone `now()` tool — it returns
-    a rich dict (year, month, weekday, quarter, week_of_year, etc.) in one call.
-
-    Errors in any item raise immediately with the index and op for debugging.
+    unit: seconds|minutes|hours|days|weeks (+ months|years for add).
     """
     if isinstance(ops, dict):
         ops = [ops]
