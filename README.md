@@ -2,6 +2,8 @@
 
 <!-- mcp-name: io.github.lihtness/gnomon-mcp -->
 
+[![PyPI](https://img.shields.io/pypi/v/gnomon-mcp.svg)](https://pypi.org/project/gnomon-mcp/) [![Python](https://img.shields.io/pypi/pyversions/gnomon-mcp.svg)](https://pypi.org/project/gnomon-mcp/) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.lihtness%2Fgnomon--mcp-7c3aed)](https://registry.modelcontextprotocol.io/v0/servers?search=gnomon)
+
 > The pointer on a sundial that turns shadow into time.
 
 A small MCP server for the boring-but-essential utilities every model needs: dates, calendars, arithmetic, unit conversion. Use it so your assistant stops "next-token guessing" math and date math.
