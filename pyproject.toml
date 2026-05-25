@@ -10,7 +10,24 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Senthil Ramasamy" }]
-keywords = ["mcp", "model-context-protocol", "calendar", "calculator", "utilities"]
+keywords = [
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "llm",
+    "llm-tools",
+    "agents",
+    "ai-agents",
+    "claude",
+    "anthropic",
+    "calendar",
+    "calculator",
+    "date-math",
+    "datetime",
+    "units",
+    "unit-conversion",
+    "utilities",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -19,6 +36,9 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
 ]
 dependencies = [
     "mcp>=1.2.0",
