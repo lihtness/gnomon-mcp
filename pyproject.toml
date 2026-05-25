@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gnomon-mcp"
+version = "0.1.0"
+description = "A small MCP server for the boring-but-essential utilities: dates, calendars, arithmetic, unit conversion."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Senthil Ramasamy" }]
+keywords = ["mcp", "model-context-protocol", "calendar", "calculator", "utilities"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "mcp>=1.2.0",
+    "python-dateutil>=2.9",
+    "dateparser>=1.2",
+    "pint>=0.24",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+]
+
+[project.scripts]
+gnomon-mcp = "gnomon_mcp.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/lihtness/gnomon-mcp"
+Repository = "https://github.com/lihtness/gnomon-mcp"
+Issues = "https://github.com/lihtness/gnomon-mcp/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gnomon_mcp"]
