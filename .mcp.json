@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "gnomon": {
+      "command": "uvx",
+      "args": ["gnomon-mcp"]
+    }
+  }
+}

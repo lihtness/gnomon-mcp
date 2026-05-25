@@ -1,0 +1,13 @@
+{
+  "name": "gnomon-mcp",
+  "owner": {
+    "name": "Senthil Ramasamy"
+  },
+  "plugins": [
+    {
+      "name": "gnomon",
+      "source": ".",
+      "description": "Deterministic dates, calendars, math, and unit conversion for LLM agents — stop next-token-guessing."
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "gnomon",
+  "description": "Deterministic dates, calendars, math, and unit conversion for LLM agents — stop next-token-guessing.",
+  "version": "0.1.2",
+  "author": {
+    "name": "Senthil Ramasamy"
+  },
+  "homepage": "https://github.com/lihtness/gnomon-mcp",
+  "license": "MIT"
+}

@@ -209,11 +209,22 @@ Then point your MCP client at `http://<host>:8000/mcp` (or `/sse` for the SSE tr
 
 ## Tell your agent to actually use it
 
-The MCP tool descriptions are intentionally terse to keep persistent context cost minimal (~150 tokens for all four tools). Two ways to give the model the richer "when to reach for gnomon" guidance:
+The MCP tool descriptions are intentionally terse to keep persistent context cost minimal (~150 tokens for all four tools). The richer "when to reach for gnomon" guidance lives in a Claude Code skill that loads on demand.
 
-### Option A — Claude Code skill (loads on demand)
+### Option A — Claude Code plugin (one command, recommended)
 
-Recommended for Claude Code. Installs the [`gnomon` skill](skills/gnomon/SKILL.md): only the name + short description sit in persistent context (~40 tokens); the full guidance loads only when the task obviously needs it.
+The plugin wires both the MCP server *and* the skill in one shot. Inside Claude Code:
+
+```
+/plugin marketplace add lihtness/gnomon-mcp
+/plugin install gnomon@gnomon-mcp
+```
+
+That registers `gnomon` as an MCP server (auto-starts via `uvx`) and installs the on-demand skill. Skill body loads only when the task triggers it — persistent context stays ~150 tokens for the four tool descriptions plus ~40 tokens for the skill's name + summary.
+
+### Option B — manual skill install (no plugin)
+
+If you've already wired the MCP server with `claude mcp add gnomon -- uvx gnomon-mcp` and only want the skill:
 
 ```bash
 mkdir -p ~/.claude/skills/gnomon
@@ -221,9 +232,9 @@ curl -fsSL https://raw.githubusercontent.com/lihtness/gnomon-mcp/main/skills/gno
   -o ~/.claude/skills/gnomon/SKILL.md
 ```
 
-### Option B — paste into your system prompt (always on)
+### Option C — paste into your system prompt (non-Claude-Code agents)
 
-For non-Claude-Code agents, or if you want the guidance always-on, paste this short version into your system prompt or `CLAUDE.md`:
+For agents without skill support, paste this short version into your system prompt or `CLAUDE.md`:
 
 ```text
 You have gnomon: deterministic tools for dates and math. Use them instead
